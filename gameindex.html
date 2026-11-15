@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cyber Dodge</title>
+    <style>
+        :root {
+            --primary: #00ffcc;
+            --primary-glow: rgba(0, 255, 204, 0.4);
+            --bg-gradient: linear-gradient(180deg, #12121a 0%, #1a1a2e 100%);
+        }
+        /* Стили тем оформления */
+        body.theme-purple {
+            --primary: #b026ff;
+            --primary-glow: rgba(176, 38, 255, 0.4);
+            --bg-gradient: linear-gradient(180deg, #100b1a 0%, #221233 100%);
+        }
+        body.theme-red {
+            --primary: #ff2a5f;
+            --primary-glow: rgba(255, 42, 95, 0.4);
+            --bg-gradient: linear-gradient(180deg, #1a0b0d 0%, #331217 100%);
+        }
+        body.theme-gold {
+            --primary: #ffd700;
+            --primary-glow: rgba(255, 215, 0, 0.4);
+            --bg-gradient: linear-gradient(180deg, #1a170b 0%, #332d12 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body {
+            background-color: #0d0d12;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            touch-action: none;
+        }
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            background: var(--bg-gradient);
+            box-shadow: 0 0 30px var(--primary-glow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            flex-grow: 1;
+        }
+        #ui-layer {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 16px;
+            font-weight: bold;
+            pointer-events: none;
+            text-shadow: 0 0 10px var(--primary-glow);
+            z-index: 5;
+        }
+        #active-effects {
+            position: absolute;
+            top: 60px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .effect-badge {
+            background: var(--primary-glow);
+            border: 1px solid var(--primary);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: var(--primary);
+            text-shadow: 0 0 5px var(--primary);
+        }
+        #mobile-controls {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: rgba(13, 13, 18, 0.95);
+            border-top: 1px solid var(--primary-glow);
+            z-index: 5;
+            height: 75px;
+            flex-shrink: 0;
+        }
+        .ctrl-group {
+            display: flex;
+            gap: 10px;
+        }
+        .ctrl-btn {
+            background: var(--primary-glow);
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            font-size: 18px;
+            font-weight: bold;
+            width: 75px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+        .ctrl-btn:active {
+            background: var(--primary);
+            color: #0d0d12;
+        }
+        .screen {
+            position: absolute;
+            inset: 0;
+            background: rgba(13, 13, 18, 0.95);
+            backdrop-filter: blur(8px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 25px;
+            z-index: 10;
+        }
+        h1 {
+            font-size: 32px;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px var(--primary-glow);
+        }
+        p {
+            color: #a0a0b5;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        input {
+            width: 100%;
+            max-width: 280px;
+            padding: 12px 16px;
+            background: #1a1a2e;
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            margin-bottom: 15px;
+            outline: none;
+            text-align: center;
+        }
+        .stats-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--primary-glow);
+            border-radius: 12px;
+            padding: 15px;
+            width: 100%;
+            max-width: 280px;
+            margin-bottom: 15px;
+            font-size: 15px;
+        }
+        .stats-box div {
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        button {
+            background: var(--primary);
+            color: #0d0d12;
+            border: none;
+            padding: 11px 25px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 20px var(--primary-glow);
+            transition: transform 0.1s;
+            margin: 5px 0;
+            width: 100%;
+            max-width: 260px;
+        }
+        button:active { transform: scale(0.95); }
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            box-shadow: none;
+        }
+        .guide-text {
+            text-align: left;
+            font-size: 13px;
+            color: #c0c0d5;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--primary-glow);
+            padding: 12px;
+            border-radius: 10px;
+            max-width: 320px;
+            margin-bottom: 15px;
+            line-height: 1.5;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+        .watermark {
+            position: absolute;
+            bottom: 12px;
+            right: 15px;
+            color: #7b42f6;
+            font-size: 11px;
+            text-align: right;
+            opacity: 0.85;
+            pointer-events: none;
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 8px rgba(123, 66, 246, 0.5);
+        }
+        .watermark span {
+            font-size: 8px;
+            vertical-align: super;
+        }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="ui-layer" class="hidden">
+        <div>Игрок: <span id="ui-player" style="color:#ffd700;"></span></div>
+        <div>Счёт: <span id="score">0</span> | Рекорд: <span id="best-score">0</span></div>
+    </div>
+    <div id="active-effects"></div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="mobile-controls" class="hidden">
+        <div class="ctrl-group">
+            <div class="ctrl-btn" id="btn-left">◀ A</div>
+        </div>
+        <div class="ctrl-group">
+            <div class="ctrl-btn" id="btn-right">D ▶</div>
+        </div>
+    </div>
+
+    <!-- АВТОРИЗАЦИЯ -->
+    <div id="auth-screen" class="screen">
+        <h1>CYBER DODGE</h1>
+        <p>Введите ваш никнейм для сохранения аккаунта.</p>
+        <input type="text" id="username-input" placeholder="Ваш ник" maxlength="15">
+        <button id="login-btn">ВОЙТИ</button>
+        <div id="saved-accounts" style="margin-top: 15px; width: 100%; max-width: 280px;"></div>
+        <div class="watermark">discord - mosslurk<br>2026<span>©</span></div>
+    </div>
+
+    <!-- ГЛАВНОЕ МЕНЮ -->
+    <div id="menu-screen" class="screen hidden">
+        <h1>CYBER DODGE</h1>
+        <div class="stats-box">
+            <div>Игрок: <b id="profile-name" style="color:var(--primary);"></b></div>
+            <div>Рекорд: <b id="profile-best" style="color:#ffd700;">0</b></div>
+            <div>Монеты: <b id="profile-coins" style="color:#ff3366;">0</b></div>
+            <div>Чекпоинт: <b id="profile-checkpoint" style="color:#ff0055;">0 очк.</b></div>
+        </div>
+        <button id="main-play-btn">ИГРАТЬ</button>
+        <button id="style-btn" class="btn-secondary">СТИЛИ</button>
+        <button id="shop-btn" class="btn-secondary">МАГАЗИН</button>
+        <button id="guide-btn" class="btn-secondary">КАК ИГРАТЬ</button>
+        <button id="switch-account-btn" class="btn-secondary" style="font-size:11px; padding:7px;">СМЕНИТЬ АККАУНТ</button>
+        <div class="watermark">discord - mosslurk<br>2026<span>©</span></div>
+    </div>
+
+    <!-- ЭКРАН: ВЫБОР СТИЛЯ -->
+    <div id="style-screen" class="screen hidden">
+        <h1>ВЫБОР СТИЛЯ</h1>
+        <p>Меняйте оформление и цвет шарика под настроение:</p>
+        <button onclick="setTheme('neon')" style="border-color:#00ffcc;">Кибер-Неон (Бирюзовый)</button>
+        <button onclick="setTheme('purple')" style="border-color:#b026ff; color:#b026ff;">Томный Фиолетовый</button>
+        <button onclick="setTheme('red')" style="border-color:#ff2a5f; color:#ff2a5f;">Кровавый Рубин</button>
+        <button onclick="setTheme('gold')" style="border-color:#ffd700; color:#ffd700;">Солнечный Золотой</button>
+        <button id="back-from-style-btn" class="btn-secondary" style="margin-top:15px;">НАЗАД</button>
+        <div class="watermark">discord - mosslurk<br>2026<span>©</span></div>
+    </div>
+
+    <!-- ЭКРАН: МАГАЗИН -->
+    <div id="shop-screen" class="screen hidden">
+        <h1>МАГАЗИН</h1>
+        <p>Покупайте мощные улучшения навсегда за монеты!</p>
+        <div class="stats-box">
+            <div>Ваши монеты: <b id="shop-coins-val" style="color:#ff3366;">0</b></div>
+        </div>
+        <button id="buy-shield-btn">ЩИТ НА 3 МИНУТЫ<br><span style="font-size:11px; color:#ffd700;">7999 монет</span></button>
+        <button id="buy-x2-btn">ДВОЙНЫЕ СФЕРЫ (x2)<br><span style="font-size:11px; color:#ffd700;">4500 монет</span></button>
+        <button id="buy-supermag-btn">СУПЕР-МАГНИТ<br><span style="font-size:11px; color:#ffd700;">6000 монет</span></button>
+        <button id="buy-startboost-btn">СТАРТОВЫЙ БУСТ (+1000 очков)<br><span style="font-size:11px; color:#ffd700;">3500 монет</span></button>
+        <button id="back-from-shop-btn" class="btn-secondary">НАЗАД В МЕНЮ</button>
+        <div class="watermark">discord - mosslurk<br>2026<span>©</span></div>
+    </div>
+
+    <!-- ЭКРАН: КАК ИГРАТЬ -->
+    <div id="guide-screen" class="screen hidden">
+        <h1>КАК ИГРАТЬ</h1>
+        <div class="guide-text">
+            <b>🎮 Управление:</b> Стрелки / WASD на ПК или кнопки ◀ / ▶ внизу на телефоне.<br><br>
+            <b>🛡️ Усиления:</b><br>
+            • <b>Щит (🛡️):</b> 3 удара.<br>
+            • <b>Слоумо (⏳):</b> замедление времени.<br>
+            • <b>+500 (💎):</b> +500 очков к счету.<br>
+            • <b>Магнит (🧲):</b> сбор сфер.<br>
+            • <b>Призрак (👻):</b> сквозной пролет.<br><br>
+            <b>🚩 Чекпоинты:</b> Каждые 300 очков сохраняют ваш прогресс для возрождения!
+        </div>
+        <button id="back-from-guide-btn">НАЗАД</button>
+        <div class="watermark">discord - mosslurk<br>2026<span>©</span></div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('game-container');
+
+    const uiLayer = document.getElementById('ui-layer');
+    const uiPlayer = document.getElementById('ui-player');
+    const scoreEl = document.getElementById('score');
+    const bestScoreEl = document.getElementById('best-score');
+    const activeEffectsEl = document.getElementById('active-effects');
+    const mobileControls = document.getElementById('mobile-controls');
+    
+    // Экраны
+    const authScreen = document.getElementById('auth-screen');
+    const usernameInput = document.getElementById('username-input');
+    const loginBtn = document.getElementById('login-btn');
+    const savedAccountsEl = document.getElementById('saved-accounts');
+
+    const menuScreen = document.getElementById('menu-screen');
+    const profileName = document.getElementById('profile-name');
+    const profileBest = document.getElementById('profile-best');
+    const profileCoins = document.getElementById('profile-coins');
+    const profileCheckpoint = document.getElementById('profile-checkpoint');
+    
+    const mainPlayBtn = document.getElementById('main-play-btn');
+    const styleBtn = document.getElementById('style-btn');
+    const shopBtn = document.getElementById('shop-btn');
+    const guideBtn = document.getElementById('guide-btn');
+    const switchAccountBtn = document.getElementById('switch-account-btn');
+
+    const styleScreen = document.getElementById('style-screen');
+    const backFromStyleBtn = document.getElementById('back-from-style-btn');
+
+    const shopScreen = document.getElementById('shop-screen');
+    const backFromShopBtn = document.getElementById('back-from-shop-btn');
+    const shopCoinsVal = document.getElementById('shop-coins-val');
+    const buyShieldBtn = document.getElementById('buy-shield-btn');
+    const buyX2Btn = document.getElementById('buy-x2-btn');
+    const buySuperMagBtn = document.getElementById('buy-supermag-btn');
+    const buyStartBoostBtn = document.getElementById('buy-startboost-btn');
+
+    const guideScreen = document.getElementById('guide-screen');
+    const backFromGuideBtn = document.getElementById('back-from-guide-btn');
+
+    let width, height;
+    function resize() {
+        width = canvas.width = container.clientWidth;
+        let controlsHeight = mobileControls.classList.contains('hidden') ? 0 : mobileControls.offsetHeight;
+        height = canvas.height = container.clientHeight - controlsHeight;
+        if (player) player.y = height * 0.75;
+    }
+    window.addEventListener('resize', resize);
+
+    let currentProfile = null;
+
+    // Управление темами оформления
+    function setTheme(theme) {
+        document.body.className = '';
+        if (theme === 'purple') document.body.classList.add('theme-purple');
+        if (theme === 'red') document.body.classList.add('theme-red');
+        if (theme === 'gold') document.body.classList.add('theme-gold');
+        
+        if (currentProfile) {
+            currentProfile.theme = theme;
+            saveAccount(currentProfile);
+        }
+        updatePlayerColor();
+    }
+
+    function updatePlayerColor() {
+        if (!player) return;
+        const computedColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+        player.color = computedColor || '#00ffcc';
+    }
+
+    // Мягкая озвучка кнопок
+    let audioCtx = null;
+    function playSoftClickSound() {
+        try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.08);
+            gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.08);
+        } catch(e) {}
+    }
+
+    document.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', playSoftClickSound);
+    });
+
+    function getAllAccounts() {
+        return JSON.parse(localStorage.getItem('cyber_accounts') || '{}');
+    }
+
+    function saveAccount(profile) {
+        let accounts = getAllAccounts();
+        accounts[profile.name] = profile;
+        localStorage.setItem('cyber_accounts', JSON.stringify(accounts));
+        localStorage.setItem('cyber_current_user', profile.name);
+    }
+
+    function initAuth() {
+        let accounts = getAllAccounts();
+        let lastUser = localStorage.getItem('cyber_current_user');
+        if (lastUser && accounts[lastUser]) {
+            loginUser(lastUser);
+        } else {
+            renderSavedAccounts();
+        }
+    }
+
+    function renderSavedAccounts() {
+        let accounts = getAllAccounts();
+        let names = Object.keys(accounts);
+        if (names.length > 0) {
+            savedAccountsEl.innerHTML = '<p style="font-size:12px; margin-bottom:6px;">Быстрый вход:</p>';
+            names.forEach(name => {
+                let btn = document.createElement('button');
+                btn.textContent = `${name} (${accounts[name].best})`;
+                btn.style.cssText = "width:100%; margin:3px 0; padding:8px; font-size:13px; background:#1a1a2e; color:var(--primary); border:1px solid var(--primary);";
+                btn.onclick = () => { playSoftClickSound(); loginUser(name); };
+                savedAccountsEl.appendChild(btn);
+            });
+        }
+    }
+
+    function loginUser(name) {
+        let cleanName = name.trim();
+        if (!cleanName) return;
+        let accounts = getAllAccounts();
+        if (!accounts[cleanName]) {
+            accounts[cleanName] = { 
+                name: cleanName, best: 0, coins: 0, checkpointScore: 0, 
+                permShield: 0, hasX2: false, hasSuperMag: false, hasStartBoost: false, theme: 'neon' 
+            };
+        }
+        currentProfile = accounts[cleanName];
+        if (currentProfile.theme) setTheme(currentProfile.theme);
+        saveAccount(currentProfile);
+
+        authScreen.classList.add('hidden');
+        menuScreen.classList.remove('hidden');
+        updateMenuProfile();
+    }
+
+    function updateMenuProfile() {
+        profileName.textContent = currentProfile.name;
+        profileBest.textContent = currentProfile.best;
+        profileCoins.textContent = currentProfile.coins;
+        profileCheckpoint.textContent = currentProfile.checkpointScore + ' очк.';
+        shopCoinsVal.textContent = currentProfile.coins;
+        
+        if (currentProfile.checkpointScore > 0) {
+            mainPlayBtn.textContent = `ИГРАТЬ (Чекпоинт: ${currentProfile.checkpointScore})`;
+        } else {
+            mainPlayBtn.textContent = 'ИГРАТЬ';
+        }
+    }
+
+    loginBtn.onclick = () => loginUser(usernameInput.value);
+    usernameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') loginUser(usernameInput.value); });
+    
+    switchAccountBtn.onclick = () => {
+        menuScreen.classList.add('hidden');
+        authScreen.classList.remove('hidden');
+        usernameInput.value = '';
+        renderSavedAccounts();
+    };
+
+    styleBtn.onclick = () => { menuScreen.classList.add('hidden'); styleScreen.classList.remove('hidden'); };
+    backFromStyleBtn.onclick = () => { styleScreen.classList.add('hidden'); menuScreen.classList.remove('hidden'); };
+
+    shopBtn.onclick = () => { menuScreen.classList.add('hidden'); shopScreen.classList.remove('hidden'); shopCoinsVal.textContent = currentProfile.coins; };
+    backFromShopBtn.onclick = () => { shopScreen.classList.add('hidden'); menuScreen.classList.remove('hidden'); };
+
+    guideBtn.onclick = () => { menuScreen.classList.add('hidden'); guideScreen.classList.remove('hidden'); };
+    backFromGuideBtn.onclick = () => { guideScreen.classList.add('hidden'); menuScreen.classList.remove('hidden'); };
+
+    // Покупка улучшений в магазине
+    buyShieldBtn.onclick = () => {
+        if (currentProfile.coins >= 7999) {
+            currentProfile.coins -= 7999;
+            currentProfile.permShield = Date.now() + 180000;
+            saveAccount(currentProfile);
+            shopCoinsVal.textContent = currentProfile.coins;
+            alert('Успешно куплено! Щит на 3 минуты активирован.');
+        } else { alert('Не хватает монет! (Нужно 7999)'); }
+    };
+
+    buyX2Btn.onclick = () => {
+        if (currentProfile.hasX2) { alert('Уже куплено!'); return; }
+        if (currentProfile.coins >= 4500) {
+            currentProfile.coins -= 4500;
+            currentProfile.hasX2 = true;
+            saveAccount(currentProfile);
+            shopCoinsVal.textContent = currentProfile.coins;
+            alert('Куплено! Теперь монеты за заезды удваиваются (x2).');
+        } else { alert('Не хватает монет! (Нужно 4500)'); }
+    };
+
+    buySuperMagBtn.onclick = () => {
+        if (currentProfile.hasSuperMag) { alert('Уже куплено!'); return; }
+        if (currentProfile.coins >= 6000) {
+            currentProfile.coins -= 6000;
+            currentProfile.hasSuperMag = true;
+            saveAccount(currentProfile);
+            shopCoinsVal.textContent = currentProfile.coins;
+            alert('Куплено! Радиус притяжения сфер увеличен навсегда.');
+        } else { alert('Не хватает монет! (Нужно 6000)'); }
+    };
+
+    buyStartBoostBtn.onclick = () => {
+        if (currentProfile.hasStartBoost) { alert('Уже куплено!'); return; }
+        if (currentProfile.coins >= 3500) {
+            currentProfile.coins -= 3500;
+            currentProfile.hasStartBoost = true;
+            saveAccount(currentProfile);
+            shopCoinsVal.textContent = currentProfile.coins;
+            alert('Куплено! Каждая игра теперь будет начинаться сразу с +1000 очков.');
+        } else { alert('Не хватает монет! (Нужно 3500)'); }
+    };
+
+    // Музыка
+    let audioCtxMusic = null;
+    let musicInterval = null;
+
+    function startAmbientMusic() {
+        if (!audioCtxMusic) audioCtxMusic = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtxMusic.state === 'suspended') audioCtxMusic.resume();
+
+        const notes = [220.00, 246.94, 293.66, 329.63, 392.00, 440.00, 523.25];
+        if (musicInterval) clearInterval(musicInterval);
+
+        musicInterval = setInterval(() => {
+            if (!isPlaying) return;
+            let osc = audioCtxMusic.createOscillator();
+            let gain = audioCtxMusic.createGain();
+            let freq = notes[Math.floor(Math.random() * notes.length)];
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, audioCtxMusic.currentTime);
+
+            gain.gain.setValueAtTime(0, audioCtxMusic.currentTime);
+            gain.gain.linearRampToValueAtTime(0.04, audioCtxMusic.currentTime + 1.5);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtxMusic.currentTime + 5.0);
+
+            osc.connect(gain);
+            gain.connect(audioCtxMusic.destination);
+            osc.start();
+            osc.stop(audioCtxMusic.currentTime + 5.0);
+        }, 2200);
+    }
+
+    function stopAmbientMusic() {
+        if (musicInterval) { clearInterval(musicInterval); musicInterval = null; }
+    }
+
+    let isPlaying = false;
+    let score = 0;
+    let gameSpeed = 1.5;
+    let spawnTimer = 0;
+    let frameCount = 0;
+
+    const player = {
+        x: 0, y: 0,
+        radius: 16,
+        color: '#00ffcc',
+        targetX: 0,
+        shieldHP: 0
+    };
+
+    resize();
+    updatePlayerColor();
+    player.x = width / 2;
+    player.targetX = width / 2;
+
+    let obstacles = [];
+    let bonuses = [];
+    let powerups = [];
+    let checkpoints = [];
+    let particles = [];
+    let activeEffects = {};
+
+    function updateTarget(clientX) {
+        const rect = canvas.getBoundingClientRect();
+        let x = clientX - rect.left;
+        player.targetX = Math.max(player.radius, Math.min(width - player.radius, x));
+    }
+
+    canvas.addEventListener('mousemove', (e) => { if (isPlaying) updateTarget(e.clientX); });
+    canvas.addEventListener('touchmove', (e) => { if (isPlaying && e.touches.length > 0) updateTarget(e.touches[0].clientX); }, { passive: true });
+    canvas.addEventListener('touchstart', (e) => { if (isPlaying && e.touches.length > 0) updateTarget(e.touches[0].clientX); }, { passive: true });
+
+    const keys = {};
+    window.addEventListener('keydown', (e) => keys[e.code] = true);
+    window.addEventListener('keyup', (e) => keys[e.code] = false);
+
+    let moveLeftPressed = false;
+    let moveRightPressed = false;
+    const btnLeft = document.getElementById('btn-left');
+    const btnRight = document.getElementById('btn-right');
+
+    ['mousedown', 'touchstart'].forEach(evt => {
+        btnLeft.addEventListener(evt, (e) => { e.preventDefault(); moveLeftPressed = true; });
+        btnRight.addEventListener(evt, (e) => { e.preventDefault(); moveRightPressed = true; });
+    });
+    ['mouseup', 'mouseleave', 'touchend'].forEach(evt => {
+        btnLeft.addEventListener(evt, () => { moveLeftPressed = false; });
+        btnRight.addEventListener(evt, () => { moveRightPressed = false; });
+    });
+
+    function createParticles(x, y, color, count = 15) {
+        for (let i = 0; i < count; i++) {
+            particles.push({
+                x, y,
+                vx: (Math.random() - 0.5) * 8,
+                vy: (Math.random() - 0.5) * 8,
+                alpha: 1, color,
+                size: Math.random() * 4 + 2
+            });
+        }
+    }
+
+    function startGame() {
+        resize();
+        updatePlayerColor();
+        isPlaying = true;
+        
+        let useCP = currentProfile.checkpointScore > 0 && confirm('Стартовать с сохраненного чекпоинта (' + currentProfile.checkpointScore + ' очков)?');
+        
+        if (useCP) {
+            score = currentProfile.checkpointScore;
+            gameSpeed = 1.5 + (score * 0.008);
+            if (gameSpeed > 7.5) gameSpeed = 7.5;
+        } else {
+            score = currentProfile.hasStartBoost ? 1000 : 0; // Стартовый буст (+1000 очков)
+            gameSpeed = 1.5 + (score * 0.008);
+        }
+
+        obstacles = [];
+        bonuses = [];
+        powerups = [];
+        checkpoints = [];
+        particles = [];
+        activeEffects = {};
+        
+        if (currentProfile.permShield && Date.now() < currentProfile.permShield) {
+            player.shieldHP = 3;
+        } else {
+            player.shieldHP = 0;
+        }
+
+        player.x = width / 2;
+        player.targetX = width / 2;
+        player.y = height * 0.75;
+        
+        scoreEl.textContent = score;
+        bestScoreEl.textContent = currentProfile.best;
+        uiPlayer.textContent = currentProfile.name;
+
+        menuScreen.classList.add('hidden');
+        uiLayer.classList.remove('hidden');
+        mobileControls.classList.remove('hidden');
+        resize();
+
+        startAmbientMusic();
+        loop();
+    }
+
+    function gameOver() {
+        isPlaying = false;
+        stopAmbientMusic();
+        uiLayer.classList.add('hidden');
+        mobileControls.classList.add('hidden');
+        resize();
+        activeEffectsEl.innerHTML = '';
+        createParticles(player.x, player.y, '#ff3366', 30);
+
+        let baseCoins = Math.floor(Math.random() * (170 - 10 + 1)) + 10;
+        let earnedCoins = currentProfile.hasX2 ? baseCoins * 2 : baseCoins;
+        currentProfile.coins += earnedCoins;
+
+        if (score > currentProfile.best) {
+            currentProfile.best = score;
+        }
+        saveAccount(currentProfile);
+
+        updateMenuProfile();
+        alert(`Игра окончена! Счёт: ${score}\nЗаработано монеток: +${earnedCoins} 💎 ${currentProfile.hasX2 ? '(x2 бонус)' : ''}`);
+        menuScreen.classList.remove('hidden');
+    }
+
+    mainPlayBtn.onclick = startGame;
+
+    const powerupTypes = [
+        { type: 'shield', color: '#00bfff', name: '🛡️ Щит', icon: '🛡️' },
+        { type: 'slow', color: '#9400d3', name: '⏳ Слоумо', icon: '⏳' },
+        { type: 'points', color: '#ff8c00', name: '💎 +500', icon: '+500' },
+        { type: 'magnet', color: '#00ff7f', name: '🧲 Магнит', icon: '🧲' },
+        { type: 'ghost', color: '#ffffff', name: '👻 Призрак', icon: '👻' }
+    ];
+
+    function update() {
+        frameCount++;
+
+        if (keys['ArrowLeft'] || keys['KeyA'] || moveLeftPressed) player.targetX -= 8;
+        if (keys['ArrowRight'] || keys['KeyD'] || moveRightPressed) player.targetX += 8;
+        
+        player.targetX = Math.max(player.radius, Math.min(width - player.radius, player.targetX));
+        player.x += (player.targetX - player.x) * 0.25;
+
+        let currentSpeedMultiplier = activeEffects.slow ? 0.5 : 1.0;
+        gameSpeed = (1.5 + (score * 0.008));
+        if (gameSpeed > 7.5) gameSpeed = 7.5;
+        let effectiveSpeed = gameSpeed * currentSpeedMultiplier;
+
+        if (frameCount % 12 === 0) {
+            score++;
+            scoreEl.textContent = score;
+
+            if (score > 0 && score % 300 === 0 && checkpoints.length === 0) {
+                checkpoints.push({
+                    x: Math.random() * (width - 40) + 20,
+                    y: -50, size: 32,
+                    targetScore: score,
+                    speed: effectiveSpeed * 0.8
+                });
+            }
+        }
+
+        let activeHTML = '';
+        if (player.shieldHP > 0) activeHTML += `<div class="effect-badge">🛡️ Щит: ${player.shieldHP}/3</div>`;
+        for (let key in activeEffects) {
+            activeEffects[key]--;
+            if (activeEffects[key] <= 0) {
+                delete activeEffects[key];
+            } else {
+                let name = key === 'slow' ? '⏳ Слоумо' : (key === 'magnet' ? '🧲 Магнит' : '👻 Призрак');
+                activeHTML += `<div class="effect-badge">${name}: ${(activeEffects[key]/60).toFixed(1)}с</div>`;
+            }
+        }
+        activeEffectsEl.innerHTML = activeHTML;
+
+        spawnTimer++;
+        let spawnRate = Math.max(25, Math.floor(65 - gameSpeed * 4));
+        if (spawnTimer >= spawnRate) {
+            spawnTimer = 0;
+            const obsWidth = Math.random() * 70 + 40;
+            obstacles.push({
+                x: Math.random() * (width - obsWidth),
+                y: -30, w: obsWidth, h: 22,
+                speed: effectiveSpeed + Math.random() * 1.0
+            });
+
+            if (Math.random() < 0.25) {
+                bonuses.push({
+                    x: Math.random() * (width - 30) + 15,
+                    y: -50, radius: 10,
+                    speed: effectiveSpeed * 0.85
+                });
+            }
+
+            if (Math.random() < 0.08 && powerups.length === 0) {
+                let randomPow = powerupTypes[Math.floor(Math.random() * powerupTypes.length)];
+                powerups.push({
+                    x: Math.random() * (width - 40) + 20,
+                    y: -50, size: 28,
+                    data: randomPow,
+                    speed: effectiveSpeed * 0.8
+                });
+            }
+        }
+
+        let magnetMultiplier = currentProfile && currentProfile.hasSuperMag ? 2.2 : 1.0;
+
+        for (let i = checkpoints.length - 1; i >= 0; i--) {
+            let cp = checkpoints[i];
+            cp.y += cp.speed;
+
+            let closestX = Math.max(cp.x - cp.size/2, Math.min(player.x, cp.x + cp.size/2));
+            let closestY = Math.max(cp.y - cp.size/2, Math.min(player.y, cp.y + cp.size/2));
+            let dx = player.x - closestX;
+            let dy = player.y - closestY;
+
+            if ((dx * dx + dy * dy) < (player.radius * player.radius)) {
+                currentProfile.checkpointScore = cp.targetScore;
+                saveAccount(currentProfile);
+                updateMenuProfile();
+                createParticles(cp.x, cp.y, '#ff0055', 25);
+                checkpoints.splice(i, 1);
+                continue;
+            }
+            if (cp.y > height) checkpoints.splice(i, 1);
+        }
+
+        for (let i = obstacles.length - 1; i >= 0; i--) {
+            let obs = obstacles[i];
+            obs.y += obs.speed;
+
+            let closestX = Math.max(obs.x, Math.min(player.x, obs.x + obs.w));
+            let closestY = Math.max(obs.y, Math.min(player.y, obs.y + obs.h));
+            let dx = player.x - closestX;
+            let dy = player.y - closestY;
+
+            if ((dx * dx + dy * dy) < (player.radius * player.radius)) {
+                if (activeEffects.ghost) {
+                    obstacles.splice(i, 1);
+                    continue;
+                }
+                if (player.shieldHP > 0) {
+                    player.shieldHP--;
+                    createParticles(player.x, player.y, '#00bfff', 15);
+                    obstacles.splice(i, 1);
+                    continue;
+                }
+                gameOver();
+                return;
+            }
+            if (obs.y > height) obstacles.splice(i, 1);
+        }
+
+        for (let i = bonuses.length - 1; i >= 0; i--) {
+            let b = bonuses[i];
+            if (activeEffects.magnet) b.x += (player.x - b.x) * (0.1 * magnetMultiplier);
+            b.y += b.speed;
+
+            let dx = player.x - b.x;
+            let dy = player.y - b.y;
+            if (Math.sqrt(dx * dx + dy * dy) < player.radius + b.radius) {
+                score += 15;
+                currentProfile.coins += 1;
+                saveAccount(currentProfile);
+                scoreEl.textContent = score;
+                createParticles(b.x, b.y, '#ffd700', 10);
+                bonuses.splice(i, 1);
+                continue;
+            }
+            if (b.y > height) bonuses.splice(i, 1);
+        }
+
+        for (let i = powerups.length - 1; i >= 0; i--) {
+            let p = powerups[i];
+            if (activeEffects.magnet) p.x += (player.x - p.x) * (0.1 * magnetMultiplier);
+            p.y += p.speed;
+
+            let closestX = Math.max(p.x - p.size/2, Math.min(player.x, p.x + p.size/2));
+            let closestY = Math.max(p.y - p.size/2, Math.min(player.y, p.y + p.size/2));
+            let dx = player.x - closestX;
+            let dy = player.y - closestY;
+
+            if ((dx * dx + dy * dy) < (player.radius * player.radius)) {
+                applyPowerUp(p.data.type);
+                createParticles(p.x, p.y, p.data.color, 20);
+                powerups.splice(i, 1);
+                continue;
+            }
+            if (p.y > height) powerups.splice(i, 1);
+        }
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+            let pt = particles[i];
+            pt.x += pt.vx; pt.y += pt.vy;
+            pt.alpha -= 0.03;
+            if (pt.alpha <= 0) particles.splice(i, 1);
+        }
+    }
+
+    function applyPowerUp(type) {
+        if (type === 'shield') {
+            player.shieldHP = 3;
+        } else if (type === 'slow') {
+            activeEffects.slow = 480;
+        } else if (type === 'points') {
+            score += 500;
+            scoreEl.textContent = score;
+        } else if (type === 'magnet') {
+            activeEffects.magnet = 360;
+        } else if (type === 'ghost') {
+            activeEffects.ghost = 300;
+        }
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, width, height);
+
+        for (let cp of checkpoints) {
+            ctx.save();
+            ctx.fillStyle = '#ff0055';
+            ctx.shadowColor = '#ff0055';
+            ctx.shadowBlur = 15;
+            ctx.beginPath();
+            ctx.roundRect(cp.x - cp.size/2, cp.y - cp.size/2, cp.size, cp.size, 6);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '16px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🚩', cp.x, cp.y);
+            ctx.restore();
+        }
+
+        for (let p of powerups) {
+            ctx.save();
+            ctx.fillStyle = p.data.color;
+            ctx.shadowColor = p.data.color;
+            ctx.shadowBlur = 15;
+            ctx.beginPath();
+            ctx.roundRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size, 6);
+            ctx.fill();
+            
+            ctx.fillStyle = '#0d0d12';
+            ctx.font = '14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(p.data.icon, p.x, p.y);
+            ctx.restore();
+        }
+
+        for (let b of bonuses) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffd700';
+            ctx.shadowColor = '#ffd700';
+            ctx.shadowBlur = 12;
+            ctx.fill();
+            ctx.restore();
+        }
+
+        ctx.save();
+        ctx.fillStyle = '#ff3366';
+        ctx.shadowColor = '#ff3366';
+        ctx.shadowBlur = 10;
+        for (let obs of obstacles) {
+            ctx.beginPath();
+            ctx.roundRect(obs.x, obs.y, obs.w, obs.h, 6);
+            ctx.fill();
+        }
+        ctx.restore();
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+        ctx.fillStyle = activeEffects.ghost ? '#ffffff' : player.color;
+        ctx.shadowColor = player.shieldHP > 0 ? '#00bfff' : player.color;
+        ctx.shadowBlur = player.shieldHP > 0 ? 25 : 15;
+        ctx.fill();
+        
+        if (player.shieldHP > 0) {
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.radius + 6, 0, Math.PI * 2);
+            ctx.strokeStyle = '#00bfff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        ctx.restore();
+
+        for (let pt of particles) {
+            ctx.save();
+            ctx.globalAlpha = pt.alpha;
+            ctx.fillStyle = pt.color;
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+
+    function loop() {
+        if (!isPlaying) return;
+        update();
+        draw();
+        requestAnimationFrame(loop);
+    }
+
+    initAuth();
+</script>
+</body>
+</html>
